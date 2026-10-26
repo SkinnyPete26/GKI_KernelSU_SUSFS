@@ -78,7 +78,8 @@ runs:
         # Retry policy: googlesource periodically serves deprecated branches
         # at ZERO progress - the fetch hangs with no bytes and only dies when
         # the timeout wrapper kills it 45 minutes later (run 37814552622,
-        # android13-5.10-2022-05: 3 x 15m stalls, all dead time). Two fixes:
+        # android13-5.10-2022-05: 3 x 15m stalls under the old wall, all dead
+        # time). Two fixes:
         #   1. git's own lowSpeed abort (http.lowSpeedLimit/lowSpeedTime):
         #      die after 60s below 1KB/s instead of idling to the wall clock,
         #      so a stalled attempt costs ~1-2 min, not 45.
