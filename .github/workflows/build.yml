@@ -468,7 +468,7 @@ jobs:
 
       - name: Apply USB-Arsenal Patches
         if: contains(inputs.feature_set, 'USB-ARSENAL') || inputs.feature_set == 'All'
-        uses: ./.github/actions/usb-arsenal-patches/action.yml
+        uses: ./.github/actions/usb-arsenal-patches
         with:
           version: ${{ inputs.version }}
           sublevel: ${{ steps.extract.outputs.sublevel }}
