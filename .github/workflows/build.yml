@@ -456,6 +456,24 @@ jobs:
           version: ${{ inputs.version }}
           kernel_version: ${{ inputs.kernel_version }}
 
+      - name: Seed USB-Arsenal gadget CONFIGs
+        if: contains(inputs.feature_set, 'USB-ARSENAL') || inputs.feature_set == 'All'
+        uses: ./.github/actions/set-kernel-config
+        with:
+          config_list: |
+            CONFIG_USB_CONFIGFS_MASS_STORAGE=y
+            CONFIG_USB_CONFIGFS_F_HID=y
+            CONFIG_USB_CONFIGFS_NCM=y
+            CONFIG_USB_CONFIGFS_RNDIS=y
+
+      - name: Apply USB-Arsenal Patches
+        if: contains(inputs.feature_set, 'USB-ARSENAL') || inputs.feature_set == 'All'
+        uses: ./.github/actions/usb-arsenal-patches/action.yml
+        with:
+          version: ${{ inputs.version }}
+          sublevel: ${{ steps.extract.outputs.sublevel }}
+          os_patch_level: ${{ inputs.os_patch_level }}
+
       - name: Integrate NoMount
         if: contains(inputs.feature_set, 'NoMount') || inputs.feature_set == 'All'
         uses: ./.github/actions/nomount

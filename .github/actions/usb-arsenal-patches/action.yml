@@ -1,0 +1,33 @@
+name: 'Apply USB-Arsenal Patches'
+description: 'Apply USB-Arsenal gadget/function patches ported from kernel-patches/5.15 to android14-6.1'
+
+inputs:
+  version:
+    description: 'Kernel config version (e.g., android14-6.1)'
+    required: true
+  sublevel:
+    description: 'Kernel sublevel'
+    required: true
+  os_patch_level:
+    description: 'OS patch level (e.g., 2026-03)'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Apply USB-Arsenal Patches
+      shell: bash
+      working-directory: ${{ github.workspace }}/kernel/common
+      run: |
+        set -euo pipefail
+        PATCH_DIR="${{ github.workspace }}/.github/actions/usb-arsenal-patches/patches"
+        echo "Applying USB-Arsenal patches for ${inputs.version} sublevel ${inputs.sublevel} (${inputs.os_patch_level})"
+        # Patches are applied in filename-sort order (0001, 0002, 0004, 0005, 0006).
+        # 0004->0005->0006 stack on drivers/usb/gadget/function/f_hid.c and must
+        # be applied in that order; the 5.15 set already ships them that way.
+        for p in "$PATCH_DIR"/*.patch; do
+          [ -f "$p" ] || continue
+          echo "==> Applying $(basename "$p")"
+          patch -p1 --no-backup-if-mismatch < "$p"
+        done
+        echo "USB-Arsenal patches applied."
