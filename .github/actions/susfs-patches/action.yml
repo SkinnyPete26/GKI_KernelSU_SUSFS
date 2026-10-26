@@ -138,7 +138,25 @@ runs:
       shell: bash
       working-directory: ${{ github.workspace }}/kernel/common
       run: |
-        patch -p1 < 50_add_susfs_in_gki-${{ inputs.version }}.patch
+        # Older ACK trees (e.g. android14-6.1 sublevels < 157, such as 138) have no
+        # `#include <trace/hooks/blk.h>` in fs/namespace.c, but newer SUSFS patches
+        # carry it as context in the header hunk, so that hunk rejects. Add the line
+        # temporarily so the patch applies, then remove it again.
+        PATCHFILE="50_add_susfs_in_gki-${{ inputs.version }}.patch"
+        BLK_FAKE=0
+        if grep -q '^ #include <trace/hooks/blk.h>' "$PATCHFILE" \
+           && ! grep -q '^#include <trace/hooks/blk.h>' fs/namespace.c; then
+          sed -i '/^#include "internal.h"$/a #include <trace/hooks/blk.h>' fs/namespace.c
+          BLK_FAKE=1
+          echo "Added temporary blk.h include to fs/namespace.c for SUSFS patch context"
+        fi
+
+        patch -p1 < "$PATCHFILE"
+
+        if [ "$BLK_FAKE" = 1 ]; then
+          sed -i '/^#include <trace\/hooks\/blk.h>$/d' fs/namespace.c
+          echo "Removed temporary blk.h include from fs/namespace.c"
+        fi
 
         # SUSFS's OPEN_REDIRECT code unconditionally calls VMA_PAD_START(), which
         # only exists on GKI branches that carry Google's page-size-migration
